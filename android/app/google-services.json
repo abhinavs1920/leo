@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "152541358133",
+    "project_id": "leo-nepal",
+    "storage_bucket": "leo-nepal.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152541358133:android:c64e8d3bcd2715c858e97c",
+        "android_client_info": {
+          "package_name": "com.example.leo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "152541358133-cf6g2b5767tcjt566d33re9e0qu80m5o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsUl_sx5QVW9fPKUWPKp4A-vrlPaLDZS4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "152541358133-cf6g2b5767tcjt566d33re9e0qu80m5o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
