@@ -1,13 +1,21 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:leo/models/auth.model.dart';
+import 'package:leo/models/csmdata.model.dart';
+import 'package:leo/services/csmdata.service.dart';
+import 'package:leo/services/events.service.dart';
+import 'package:leo/services/storage.service.dart';
 import 'package:intl/intl.dart';
 import 'package:leo/widgets/chip_input.dart';
+import 'package:leo/widgets/csm_data_dropdowns.dart';
+import 'package:leo/widgets/form_input.dart';
+import 'package:nanoid/non_secure.dart';
 import 'package:leo/widgets/custom_appbar.dart';
 import 'package:leo/widgets/custom_drawer.dart';
-
+import 'package:provider/provider.dart';
 import '../utils/constants.dart';
 
 class AddEventPage extends StatefulWidget {
@@ -18,129 +26,156 @@ class AddEventPage extends StatefulWidget {
 }
 
 class _AddEventPageState extends State<AddEventPage> {
-  static const List<String> list = <String>['One', 'Two', 'Three', 'Four'];
+  final Storage _storage = Storage();
+
   List<String> coordinatorNameChips = [];
   List<String> guestNameChips = [];
   List<String> highlightChips = [];
-  File? image;
-  String fileName = '';
-  String dropdownValue = list.first;
+  String groupImageName = '';
+  String bannerImageName = '';
+  String? region;
+  String? department;
+  String? organiser;
+  String groupPhotoUrl = '';
+  String bannerPhotoUrl = '';
 
   final eventNameController = TextEditingController();
-  final eventOrganizerController = TextEditingController();
-  final regionController = TextEditingController();
   final coordinatorController = TextEditingController();
   final guestController = TextEditingController();
   final eventHighlightsController = TextEditingController();
   final eventVenueController = TextEditingController();
   final eventDateController = TextEditingController();
   final eventDescriptionController = TextEditingController();
-  final eventDepartmentController = TextEditingController();
   final peopleServedController = TextEditingController();
-  final ImagePicker picker = ImagePicker();
+  final volunteerHourController = TextEditingController();
+  final participantsController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
 
-  Future pickImage() async {
-    try {
-      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-      final imageTemp = File(image.path);
-      setState(() {
-        this.image = imageTemp;
-        fileName = imageTemp.toString().split('/').last;
-      });
+  Future<void> _createEvent(String uid) async {
+    await EventsService(uid: uid).addEmergency(
+      eventNameController.text,
+      organiser ?? '',
+      region ?? '',
+      department ?? '',
+      eventVenueController.text,
+      eventDateController.text,
+      double.parse(peopleServedController.text),
+      double.parse(participantsController.text),
+      eventDescriptionController.text,
+      double.parse(volunteerHourController.text),
+      guestNameChips,
+      coordinatorNameChips,
+      highlightChips,
+      [
+        bannerPhotoUrl,
+        groupPhotoUrl,
+      ],
+    );
+    setState(
+      () {
+        eventNameController.clear();
+        eventVenueController.clear();
+        eventDateController.clear();
+        peopleServedController.clear();
+        participantsController.clear();
+        eventDescriptionController.clear();
+        volunteerHourController.clear();
+        coordinatorNameChips.clear();
+        guestNameChips.clear();
+        highlightChips.clear();
+        groupImageName = '';
+        bannerImageName = '';
+        groupPhotoUrl = '';
+        bannerPhotoUrl = '';
+      },
+    );
+  }
 
-      print(imageTemp.toString().split('/').last);
-    } on PlatformException catch (e) {
-      print('Failed to pick image: $e');
+  Future<String> _uploadEventImage(trigger) async {
+    final selectedImage = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png'],
+    );
+
+    if (selectedImage == null) {
+      return '';
     }
+
+    final path = selectedImage.files.single.path;
+    final name = nanoid();
+
+    final url = await _storage.uploadImage(name, File(path!));
+    setState(() {
+      [trigger == 'group' ? groupImageName = path : bannerImageName = path];
+      [trigger == 'group' ? groupPhotoUrl = url : bannerPhotoUrl = url];
+    });
+    return url;
   }
 
-  void addCoordinatorChip(String value) {
+  void addChip(
+      List<String> list, TextEditingController controller, String value) {
     setState(() {
-      coordinatorNameChips.add(value);
-      coordinatorController.clear();
+      list.add(value);
+      controller.clear();
     });
   }
 
-  void removeCoordinatorChip(String chip) {
+  void removeChip(List<String> list, String chip) {
     setState(() {
-      coordinatorNameChips.remove(chip);
+      list.remove(chip);
     });
   }
 
-  void addGuestChip(String value) {
+  void setCSMData(String value, String type) {
     setState(() {
-      guestNameChips.add(value);
-      guestController.clear();
-    });
-  }
-
-  void removeGuestChip(String chip) {
-    setState(() {
-      guestNameChips.remove(chip);
-    });
-  }
-
-  void addHighlightsChip(String value) {
-    setState(() {
-      highlightChips.add(value);
-      eventHighlightsController.clear();
-    });
-  }
-
-  void removeHighlightsChip(String chip) {
-    setState(() {
-      highlightChips.remove(chip);
+      if (type == 'region') {
+        region = value;
+      } else if (type == 'department') {
+        department = value;
+      } else {
+        organiser = value;
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final authModel = Provider.of<AuthModel?>(context);
     return Scaffold(
       appBar: const CustomAppBar(title: "Add Event"),
-      drawer: const CustomDrawer(),
+      endDrawer: const CustomDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(defaultPadding),
         child: Form(
           key: formKey,
           child: ListView(
             children: [
-              TextFormField(
+              CustomFormInput(
                 controller: eventNameController,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: 'Enter event name',
-                  labelText: 'Event Name',
-                ),
+                hintText: 'Enter event name',
+                labelText: 'Event Name',
+                listOfTextInputFormatters: [],
+                isNumber: false,
               ),
-              const SizedBox(height: defaultPadding),
-              TextFormField(
-                controller: eventOrganizerController,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: 'Enter you organization name',
-                  labelText: 'Organization Name',
-                ),
-              ),
-              const SizedBox(height: defaultPadding),
-              TextFormField(
+              CustomFormInput(
                 controller: eventVenueController,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: 'Enter event venue',
-                  labelText: 'Event Venue',
-                ),
+                hintText: 'Enter event venue',
+                labelText: 'Event Venue',
+                listOfTextInputFormatters: [],
+                isNumber: false,
               ),
-              const SizedBox(height: defaultPadding),
               TextFormField(
                 controller: eventDescriptionController,
                 keyboardType: TextInputType.multiline,
                 maxLines: 5,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
                 textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   hintText: 'Enter event description',
@@ -149,28 +184,65 @@ class _AddEventPageState extends State<AddEventPage> {
                 ),
               ),
               const SizedBox(height: defaultPadding),
-              TextFormField(
-                controller: eventDepartmentController,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: 'Enter event department',
-                  labelText: 'Event Department',
-                ),
+              FutureBuilder<Object?>(
+                future: CSMDataService().getUserData(),
+                builder: (context, snapshot) {
+                  CSMData? csmData = snapshot.data as CSMData?;
+                  if (snapshot.hasData) {
+                    return Column(
+                      children: [
+                        CSMDataDropdowns(
+                          selectedData: region,
+                          data: csmData?.regions as List<dynamic>,
+                          type: 'region',
+                          onChanged: setCSMData,
+                        ),
+                        CSMDataDropdowns(
+                          selectedData: department,
+                          data: csmData?.departments as List<dynamic>,
+                          type: 'department',
+                          onChanged: setCSMData,
+                        ),
+                        CSMDataDropdowns(
+                          selectedData: organiser,
+                          data: csmData?.organisers as List<dynamic>,
+                          type: 'organiser',
+                          onChanged: setCSMData,
+                        ),
+                      ],
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
               ),
-              const SizedBox(height: defaultPadding),
-              TextFormField(
+              CustomFormInput(
                 controller: peopleServedController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
+                hintText: 'Enter number of people served',
+                labelText: 'People Served',
+                listOfTextInputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                 ],
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  hintText: 'Enter number of people served',
-                  labelText: 'People Served',
-                ),
+                isNumber: true,
               ),
-              const SizedBox(height: defaultPadding),
+              CustomFormInput(
+                controller: volunteerHourController,
+                hintText: 'Enter volunteer hours',
+                labelText: 'Volunteer Hours',
+                listOfTextInputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                isNumber: true,
+              ),
+              CustomFormInput(
+                controller: participantsController,
+                hintText: 'Enter event participants',
+                labelText: 'Event Participants',
+                listOfTextInputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                isNumber: true,
+              ),
               TextFormField(
                 controller: eventDateController,
                 readOnly: true,
@@ -198,56 +270,105 @@ class _AddEventPageState extends State<AddEventPage> {
                 },
               ),
               const SizedBox(height: defaultPadding),
-              ElevatedButton(
-                onPressed: () {
-                  pickImage();
-                },
-                child: Text(fileName.isEmpty ? 'Upload Group Photo' : fileName),
-              ),
-              const SizedBox(height: defaultPadding),
-              image != null
+              groupImageName.isNotEmpty
                   ? Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.black, width: 1),
                       ),
-                      child: Image.file(
-                        image!,
+                      height: 200,
+                      child: Image.network(
+                        groupPhotoUrl,
                         fit: BoxFit.contain,
                       ),
-                      height: 200,
                     )
-                  : Text(
+                  : const Text(
                       "No image selected",
                     ),
+              const SizedBox(height: defaultPadding),
+              ElevatedButton(
+                onPressed: () {
+                  _uploadEventImage("group");
+                },
+                child: Text(groupImageName.isEmpty
+                    ? 'Upload Group Photo'
+                    : groupImageName.split("/").last),
+              ),
+              const SizedBox(height: defaultPadding),
+              bannerImageName.isNotEmpty
+                  ? Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 1),
+                      ),
+                      height: 200,
+                      child: Image.network(
+                        bannerPhotoUrl,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : const Text(
+                      "No image selected",
+                    ),
+              const SizedBox(height: defaultPadding),
+              ElevatedButton(
+                onPressed: () {
+                  _uploadEventImage("banner");
+                },
+                child: Text(bannerImageName.isEmpty
+                    ? 'Upload Banner Photo'
+                    : bannerImageName.split("/").last),
+              ),
               const SizedBox(height: defaultPadding),
               ChipInput(
                 controller: coordinatorController,
                 hintText: 'Enter coordinator names',
                 labelText: 'Coordinator Names',
                 nameList: coordinatorNameChips,
-                onFieldSubmitted: addCoordinatorChip,
-                onDeleted: removeCoordinatorChip,
+                onFieldSubmitted: (value) => addChip(
+                  coordinatorNameChips,
+                  coordinatorController,
+                  value,
+                ),
+                onDeleted: (value) => removeChip(
+                  coordinatorNameChips,
+                  value,
+                ),
               ),
               ChipInput(
                 controller: guestController,
                 hintText: 'Enter guest names',
                 labelText: 'Guest Names',
                 nameList: guestNameChips,
-                onFieldSubmitted: addGuestChip,
-                onDeleted: removeGuestChip,
+                onFieldSubmitted: (value) => addChip(
+                  guestNameChips,
+                  guestController,
+                  value,
+                ),
+                onDeleted: (value) => removeChip(
+                  guestNameChips,
+                  value,
+                ),
               ),
               ChipInput(
                 controller: eventHighlightsController,
                 hintText: 'Enter event highlights',
                 labelText: 'Event Highlights',
                 nameList: highlightChips,
-                onFieldSubmitted: addHighlightsChip,
-                onDeleted: removeHighlightsChip,
+                onFieldSubmitted: (value) => addChip(
+                  highlightChips,
+                  eventHighlightsController,
+                  value,
+                ),
+                onDeleted: (value) => removeChip(
+                  highlightChips,
+                  value,
+                ),
               ),
               const SizedBox(height: defaultPadding),
               const SizedBox(height: defaultPadding * 3),
               ElevatedButton(
-                onPressed: () async {},
+                onPressed: () async {
+                  await _createEvent(authModel?.uid ?? "");
+                },
                 child: const Text('Submit Event'),
               ),
               const SizedBox(height: defaultPadding),

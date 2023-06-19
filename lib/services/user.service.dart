@@ -16,6 +16,8 @@ class UserService {
       email: (doc.data() as dynamic)['email'] ?? '',
       role: (doc.data() as dynamic)['role'] ?? '',
       homeClub: (doc.data() as dynamic)['homeClub'] ?? '',
+      region: (doc.data() as dynamic)['region'] ?? '',
+      department: (doc.data() as dynamic)['department'] ?? '',
       designation: (doc.data() as dynamic)['designation'] ?? '',
     );
   }

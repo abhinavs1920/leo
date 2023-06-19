@@ -14,6 +14,11 @@ class AuthService {
     return user != null ? AuthModel(user.uid) : null;
   }
 
+  // auth change user stream
+  Stream<AuthModel?> get user {
+    return _firebaseAuth.idTokenChanges().map(_userFromFirebaseUser);
+  }
+
   Future<AuthModel?> signInWithEmailAndPassword({
     required String email,
     required String password,

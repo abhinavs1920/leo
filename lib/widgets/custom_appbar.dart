@@ -15,6 +15,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       centerTitle: true,
       title: Text(title),
+      leading: ModalRoute.of(context)?.settings.name != '/'
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            )
+          : null,
       backgroundColor: primaryColor,
     );
   }
