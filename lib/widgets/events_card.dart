@@ -13,6 +13,7 @@ class EventsCard extends StatefulWidget {
   final String eventLocation;
   final List<dynamic> eventCoordinators;
   final String organiser;
+  final String department;
   final String venue;
   final List<dynamic> guests;
   final double participants;
@@ -26,6 +27,7 @@ class EventsCard extends StatefulWidget {
     required this.eventLocation,
     required this.eventCoordinators,
     required this.organiser,
+    required this.department,
     required this.venue,
     required this.guests,
     required this.participants,
@@ -93,10 +95,19 @@ class _EventsCardState extends State<EventsCard> {
               ),
               contentPadding: const EdgeInsets.all(defaultPadding / 2),
               subtitle: Text(
-                '${widget.eventDescription} \n\nThe event was held at ${widget.venue}. It was graced by the presence of ${widget.eventCoordinators.join(', ')}, who attended as special guests. The event had a total of ${widget.participants.toInt()} participants, and it showcased various highlights such as ${widget.highlights.join(', ')}.',
+                '${widget.eventDescription} \n\nThe event was held at ${widget.venue}. It was graced by the presence of ${widget.guests.join(', ')}, who attended as special ${widget.guests.length > 1 ? 'guests' : 'guest'}. The event had a total of ${widget.participants.toInt()} participants, and it showcased various highlights such as ${widget.highlights.join(', ')}.',
                 textAlign: TextAlign.justify,
               ),
               // trailing: const Icon(Icons.arrow_forward_ios, ),
+            ),
+            Row(
+              children: [],
+            ),
+            Row(),
+            CustomListTile(
+              title: "Department",
+              subtitle: widget.department.toTitleCase(),
+              icon: Icons.circle,
             ),
             CustomListTile(
               title: "Organiser",

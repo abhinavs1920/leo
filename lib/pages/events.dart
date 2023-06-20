@@ -62,9 +62,10 @@ class _EventsPageState extends State<EventsPage> {
       final image1 = await networkImage(event.images[0]);
       final image2 = await networkImage(event.images[1]);
       final description =
-          '${event.description} \n\nThe event was held at ${event.venue}. It was graced by the presence of ${event.coordinators.join(', ')}, who attended as special guests. The event had a total of ${event.participants.toInt()} participants, and it showcased various highlights such as ${event.highlights.join(', ')}.';
+          '${event.description} \n\nThe event was held at ${event.venue}. It was graced by the presence of ${event.guests.join(', ')}, who attended as special ${event.guests.length > 1 ? 'guests' : 'guest'}. The event had a total of ${event.participants.toInt()} participants, and it showcased various highlights such as ${event.highlights.join(', ')}.';
       final coordinator = event.coordinators.join(', ');
       final venue = event.venue;
+      final department = event.department;
       final date = DateFormat.yMMMEd().format(DateTime.parse(event.date));
 
       doc.addPage(
@@ -95,9 +96,10 @@ class _EventsPageState extends State<EventsPage> {
                         mainAxisAlignment: pw.MainAxisAlignment.start,
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text('Coordinator: $coordinator'),
-                          pw.Text('Venue: $venue'),
                           pw.Text('Date: $date'),
+                          pw.Text('Venue: $venue'),
+                          pw.Text('Department: $department'),
+                          pw.Text('Coordinator: $coordinator'),
                         ],
                       ),
                     ),
@@ -110,18 +112,8 @@ class _EventsPageState extends State<EventsPage> {
       );
     }
 
-    /// print the document using the iOS or Android print service:
     await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => doc.save());
-
-    /// share the document to other applications:
-    // await Printing.sharePdf(bytes: await doc.save(), filename: 'my-document.pdf');
-
-    /// tutorial for using path_provider: https://www.youtube.com/watch?v=fJtFDrjEvE8
-    /// save PDF with Flutter library "path_provider":
-    // final output = await getTemporaryDirectory();
-    // final file = File('${output.path}/example.pdf');
-    // await file.writeAsBytes(await doc.save());
   }
 
   @override
@@ -182,6 +174,7 @@ class _EventsPageState extends State<EventsPage> {
                                   eventLocation: event.region,
                                   eventCoordinators: event.coordinators,
                                   organiser: event.organizer,
+                                  department: event.department,
                                   venue: event.venue,
                                   guests: event.guests,
                                   participants: event.participants,
@@ -199,7 +192,7 @@ class _EventsPageState extends State<EventsPage> {
                           await downloadPDF(events);
                         },
                         backgroundColor: primaryColor,
-                        child: const Icon(Icons.download),
+                        child: Icon(Icons.download),
                       ),
                       const SizedBox(
                         height: defaultPadding,
