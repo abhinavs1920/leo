@@ -6,6 +6,7 @@ import 'package:leo/models/user.model.dart';
 import 'package:leo/services/events.service.dart';
 import 'package:leo/services/user.service.dart';
 import 'package:leo/utils/routes.dart';
+import 'package:leo/utils/string_utility.dart';
 import 'package:leo/widgets/custom_appbar.dart';
 import 'package:leo/widgets/custom_drawer.dart';
 import 'package:leo/widgets/events_card.dart';
@@ -98,7 +99,7 @@ class _EventsPageState extends State<EventsPage> {
                         children: [
                           pw.Text('Date: $date'),
                           pw.Text('Venue: $venue'),
-                          pw.Text('Department: $department'),
+                          pw.Text('Department: ${department.toCapitalized()}'),
                           pw.Text('Coordinator: $coordinator'),
                         ],
                       ),
