@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:leo/exceptions/firebase_exceptions.dart';
 import 'package:leo/services/auth.service.dart';
 import 'package:leo/utils/helpers/email_validator.dart';
 import 'package:leo/utils/helpers/password_validator.dart';
@@ -6,6 +8,36 @@ import 'package:leo/utils/routes.dart';
 import 'package:leo/widgets/loading.dart';
 
 import '../utils/constants.dart';
+
+void _showErrorDialog(BuildContext context, String message) {
+  final snackBar = SnackBar(
+    content: Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Icon(
+          Icons.error_outline,
+          size: 20,
+          color: Colors.white,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    ),
+    backgroundColor: primaryColor,
+    behavior: SnackBarBehavior.fixed,
+  );
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(snackBar);
+}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -110,21 +142,20 @@ class _LoginPageState extends State<LoginPage> {
                                 password: passwordController.text,
                               );
 
-                              navigator.pushReplacementNamed(
+                              navigator.popAndPushNamed(
                                 RouteEnums.eventsPage,
                               );
-                            } catch (error) {
-                              // final String errorMessage =
-                              //     getMessageFromErrorCode(error);
-                              // _showErrorDialog(
-                              //   context,
-                              //   errorMessage,
-                              // );
-                            } finally {
+                            } on FirebaseAuthException catch (error) {
                               setState(
                                 () {
                                   isLoading = false;
                                 },
+                              );
+                              final String errorMessage =
+                                  getMessageFromErrorCode(error);
+                              _showErrorDialog(
+                                context,
+                                errorMessage,
                               );
                             }
                           }
