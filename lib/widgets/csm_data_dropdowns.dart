@@ -28,7 +28,7 @@ class _CSMDataDropdownsState extends State<CSMDataDropdowns> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthModel?>(context);
     return FutureBuilder<Object?>(
-      future: UserService(uid: auth!.uid).getUserData(),
+      future: UserService(uid: auth?.uid ?? '').getUserData(),
       builder: (context, snapshot) {
         UserModel? userData = snapshot.data as UserModel?;
         if (snapshot.hasData) {
@@ -66,7 +66,7 @@ class _CSMDataDropdownsState extends State<CSMDataDropdowns> {
                       if (value == null || value.isEmpty) {
                         return 'Please select a ${widget.type.toCapitalized()}';
                       }
-                      if (userData?.role == 'club_admin') {
+                      if (userData?.role == 'club_pvst') {
                         if (widget.type == 'region' &&
                             userData?.region != value) {
                           return 'Not authorized to add data for this region';
@@ -77,6 +77,7 @@ class _CSMDataDropdownsState extends State<CSMDataDropdowns> {
                           return null;
                         }
                       }
+                      return null;
                     },
                   ),
                 ),

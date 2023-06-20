@@ -23,6 +23,8 @@ class StaticData {
             "https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg"
       }
     ],
-    "btnText": "Get Started"
+    "btnText": "Get Started",
+    "footerText":
+        "A blood donation camp is being organised by Leo Smapark, contact +977 984-1234567 for more details.",
   };
 }

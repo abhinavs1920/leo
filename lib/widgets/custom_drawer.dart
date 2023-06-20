@@ -6,6 +6,7 @@ import 'package:leo/utils/constants.dart';
 import 'package:leo/utils/routes.dart';
 import 'package:leo/utils/string_utility.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -18,6 +19,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
   static const TextStyle textStyle = TextStyle(
     fontSize: 16,
   );
+
+  _launchURLBrowser() async {
+    const url =
+        'https://drive.google.com/drive/folders/16G9eUxnv0mRHnFWLTABktsYjKBNO41wf';
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthModel?>(context);
@@ -47,14 +60,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 const Divider(
                   color: primaryColor,
                 ),
-                const ListTile(
-                  leading: Icon(
+                ListTile(
+                  leading: const Icon(
                     Icons.download,
                   ),
-                  title: Text(
-                    'Club Manual',
+                  title: const Text(
+                    'District Resources',
                     style: textStyle,
                   ),
+                  onTap: () async {
+                    await _launchURLBrowser();
+                  },
                 ),
                 ListTile(
                   leading: const Icon(

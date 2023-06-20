@@ -26,7 +26,6 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   Future<void> downloadPDF(List<EventsModel> events) async {
     final doc = pw.Document();
-
     // Add front page
     doc.addPage(
       pw.Page(
@@ -62,7 +61,8 @@ class _EventsPageState extends State<EventsPage> {
       final title = event.name;
       final image1 = await networkImage(event.images[0]);
       final image2 = await networkImage(event.images[1]);
-      final description = event.description;
+      final description =
+          '${event.description} \n\nThe event was held at ${event.venue}. It was graced by the presence of ${event.coordinators.join(', ')}, who attended as special guests. The event had a total of ${event.participants.toInt()} participants, and it showcased various highlights such as ${event.highlights.join(', ')}.';
       final coordinator = event.coordinators.join(', ');
       final venue = event.venue;
       final date = DateFormat.yMMMEd().format(DateTime.parse(event.date));
@@ -74,17 +74,33 @@ class _EventsPageState extends State<EventsPage> {
               child: pw.Center(
                 child: pw.Column(
                   children: [
-                    pw.Text(title, style: const pw.TextStyle(fontSize: 20)),
-                    pw.SizedBox(height: 10),
-                    pw.Image(image1, width: double.infinity),
                     pw.SizedBox(height: 40),
-                    pw.Image(image2, width: double.infinity),
+                    pw.Text(title, style: const pw.TextStyle(fontSize: 20)),
+                    pw.SizedBox(height: 40),
+                    pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Image(
+                            image1,
+                            width: 200,
+                          ),
+                          pw.Image(image2, width: 200),
+                        ]),
                     pw.SizedBox(height: 40),
                     pw.Text(description),
                     pw.SizedBox(height: 10),
-                    pw.Text('Coordinator: $coordinator'),
-                    pw.Text('Venue: $venue'),
-                    pw.Text('Date: $date'),
+                    pw.Container(
+                      width: double.infinity,
+                      child: pw.Column(
+                        mainAxisAlignment: pw.MainAxisAlignment.start,
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('Coordinator: $coordinator'),
+                          pw.Text('Venue: $venue'),
+                          pw.Text('Date: $date'),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -111,91 +127,113 @@ class _EventsPageState extends State<EventsPage> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthModel?>(context);
-    return StreamBuilder(
-      stream: EventsService(uid: auth?.uid ?? '').getAllEvents,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final events = snapshot.data;
-          return Scaffold(
-            appBar: const CustomAppBar(
+    return auth == null
+        ? const Scaffold(
+            appBar: CustomAppBar(
               title: "Events",
             ),
-            endDrawer: const CustomDrawer(),
-            body: events!.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No events available',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(defaultPadding),
-                    children: (events)
-                        .map(
-                          (event) => EventsCard(
-                            images: event.images,
-                            eventName: event.name,
-                            eventDate: DateTime.parse(event.date),
-                            eventDescription: event.description,
-                            eventLocation: event.region,
-                            eventCoordinators: event.coordinators,
-                            organiser: event.organizer,
-                            venue: event.venue,
-                            guests: event.guests,
-                            participants: event.participants,
-                            highlights: event.highlights,
+            endDrawer: CustomDrawer(),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        : FutureBuilder<List<EventsModel>>(
+            future: EventsService(uid: auth.uid).getAllUserRoleFilteredEvents(),
+            builder: (BuildContext context,
+                AsyncSnapshot<List<EventsModel>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  appBar: CustomAppBar(
+                    title: "Events",
+                  ),
+                  endDrawer: CustomDrawer(),
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else {
+                final events = snapshot.data;
+                return Scaffold(
+                  appBar: const CustomAppBar(
+                    title: "Events",
+                  ),
+                  endDrawer: const CustomDrawer(),
+                  body: events!.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No events available',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         )
-                        .toList(),
+                      : ListView(
+                          padding: const EdgeInsets.all(defaultPadding),
+                          children: (events)
+                              .map(
+                                (event) => EventsCard(
+                                  images: event.images,
+                                  eventName: event.name,
+                                  eventDate: DateTime.parse(event.date),
+                                  eventDescription: event.description,
+                                  eventLocation: event.region,
+                                  eventCoordinators: event.coordinators,
+                                  organiser: event.organizer,
+                                  venue: event.venue,
+                                  guests: event.guests,
+                                  participants: event.participants,
+                                  highlights: event.highlights,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                  floatingActionButton: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FloatingActionButton(
+                        heroTag: "downloadButton",
+                        onPressed: () async {
+                          await downloadPDF(events);
+                        },
+                        backgroundColor: primaryColor,
+                        child: const Icon(Icons.download),
+                      ),
+                      const SizedBox(
+                        height: defaultPadding,
+                      ),
+                      FloatingActionButton(
+                        heroTag: "addEventButton",
+                        onPressed: () async {
+                          final navigator = Navigator.of(context);
+                          final scaffoldMessgener =
+                              ScaffoldMessenger.of(context);
+                          UserModel? user =
+                              await UserService(uid: auth?.uid ?? '')
+                                  .getUserData();
+                          if (user.role == 'club_member' ||
+                              user.role == 'region_coordinator' ||
+                              user.role == 'department_chairperson' ||
+                              user.role == 'district_member') {
+                            const snackBar = SnackBar(
+                              content:
+                                  Text('You are not authorized to add events'),
+                            );
+                            scaffoldMessgener.showSnackBar(snackBar);
+                          } else {
+                            navigator.pushNamed(RouteEnums.addEventPage);
+                          }
+                        },
+                        backgroundColor: primaryColor,
+                        child: const Icon(Icons.add),
+                      ),
+                    ],
                   ),
-            floatingActionButton: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FloatingActionButton(
-                  heroTag: "downloadButton",
-                  onPressed: () async {
-                    await downloadPDF(events);
-                  },
-                  backgroundColor: primaryColor,
-                  child: const Icon(Icons.download),
-                ),
-                const SizedBox(
-                  height: defaultPadding,
-                ),
-                FloatingActionButton(
-                  heroTag: "addEventButton",
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    final scaffoldMessgener = ScaffoldMessenger.of(context);
-                    UserModel? user =
-                        await UserService(uid: auth?.uid ?? '').getUserData();
-                    if (user.role == 'club_member' ||
-                        user.role == 'region_coordinator' ||
-                        user.role == 'department_chairperson' ||
-                        user.role == 'district_member') {
-                      const snackBar = SnackBar(
-                        content: Text('You are not authorized to add events'),
-                      );
-                      scaffoldMessgener.showSnackBar(snackBar);
-                    } else {
-                      navigator.pushNamed(RouteEnums.addEventPage);
-                    }
-                  },
-                  backgroundColor: primaryColor,
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
+                );
+              }
+            },
           );
-        } else {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-      },
-    );
   }
 }

@@ -38,6 +38,7 @@ class _AddEventPageState extends State<AddEventPage> {
   String? organiser;
   String groupPhotoUrl = '';
   String bannerPhotoUrl = '';
+  bool _autovalidate = false;
 
   final eventNameController = TextEditingController();
   final coordinatorController = TextEditingController();
@@ -141,6 +142,27 @@ class _AddEventPageState extends State<AddEventPage> {
   }
 
   @override
+  void dispose() {
+    eventNameController.dispose();
+    eventVenueController.dispose();
+    eventDateController.dispose();
+    peopleServedController.dispose();
+    participantsController.dispose();
+    eventDescriptionController.dispose();
+    volunteerHourController.dispose();
+    coordinatorController.dispose();
+    guestController.dispose();
+    eventHighlightsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    eventDateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authModel = Provider.of<AuthModel?>(context);
     return Scaffold(
@@ -149,6 +171,7 @@ class _AddEventPageState extends State<AddEventPage> {
       body: Padding(
         padding: const EdgeInsets.all(defaultPadding),
         child: Form(
+          autovalidateMode: AutovalidateMode.always,
           key: formKey,
           child: ListView(
             children: [
@@ -185,7 +208,7 @@ class _AddEventPageState extends State<AddEventPage> {
               ),
               const SizedBox(height: defaultPadding),
               FutureBuilder<Object?>(
-                future: CSMDataService().getUserData(),
+                future: CSMDataService().getCSMData(),
                 builder: (context, snapshot) {
                   CSMData? csmData = snapshot.data as CSMData?;
                   if (snapshot.hasData) {
@@ -367,7 +390,15 @@ class _AddEventPageState extends State<AddEventPage> {
               const SizedBox(height: defaultPadding * 3),
               ElevatedButton(
                 onPressed: () async {
-                  await _createEvent(authModel?.uid ?? "");
+                  if (formKey.currentState!.validate()) {
+                    await _createEvent(authModel?.uid ?? "");
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please fill in all the fields'),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Submit Event'),
               ),
