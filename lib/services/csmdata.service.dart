@@ -19,6 +19,7 @@ class CSMDataService {
           'https://firebasestorage.googleapis.com/v0/b/leo-nepal.appspot.com/o/appImages%2Fdistrict_logo.png?alt=media&token=6d8d6b65-7287-4586-aab7-531385dcaf93',
       getStartedPageMessages:
           (doc.data() as dynamic)['getStartedPageMessages'] ?? [],
+      sideDrawer: (doc.data() as dynamic)['sideDrawer'] ?? [],
       getStartedPageBtnText:
           (doc.data() as dynamic)['getStartedPageBtnText'] ?? '',
       getStartedPageFooterText:

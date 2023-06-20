@@ -6,6 +6,7 @@ class CSMData {
   final String getStartedPageLeoLogo;
   final String getStartedPageDistrictLogo;
   final List<dynamic> getStartedPageMessages;
+  final List<dynamic> sideDrawer;
   final String getStartedPageBtnText;
   final String getStartedPageFooterText;
 
@@ -17,6 +18,7 @@ class CSMData {
     required this.getStartedPageLeoLogo,
     required this.getStartedPageDistrictLogo,
     required this.getStartedPageMessages,
+    required this.sideDrawer,
     required this.getStartedPageBtnText,
     required this.getStartedPageFooterText,
   });

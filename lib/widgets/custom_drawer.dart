@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:leo/models/auth.model.dart';
+import 'package:leo/models/csmdata.model.dart';
 import 'package:leo/services/auth.service.dart';
+import 'package:leo/services/csmdata.service.dart';
 import 'package:leo/services/user.service.dart';
 import 'package:leo/utils/constants.dart';
 import 'package:leo/utils/routes.dart';
@@ -20,9 +22,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
     fontSize: 16,
   );
 
-  _launchURLBrowser() async {
-    const url =
-        'https://drive.google.com/drive/folders/16G9eUxnv0mRHnFWLTABktsYjKBNO41wf';
+  _launchURLBrowser(String url) async {
+    ;
     Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -60,16 +61,37 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 const Divider(
                   color: primaryColor,
                 ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.download,
-                  ),
-                  title: const Text(
-                    'District Resources',
-                    style: textStyle,
-                  ),
-                  onTap: () async {
-                    await _launchURLBrowser();
+                FutureBuilder(
+                  future: CSMDataService().getCSMData(),
+                  builder:
+                      (BuildContext context, AsyncSnapshot<CSMData> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      final csmData = snapshot.data;
+                      return Column(
+                        children: csmData!.sideDrawer
+                            .map(
+                              (item) => ListTile(
+                                leading: const Icon(
+                                  Icons.download,
+                                ),
+                                title: Text(
+                                  item["title"],
+                                  style: textStyle,
+                                ),
+                                onTap: () async {
+                                  await _launchURLBrowser(item["url"]);
+                                },
+                              ),
+                            )
+                            .toList(),
+                      );
+                    }
                   },
                 ),
                 ListTile(
