@@ -78,21 +78,21 @@ class EventsService {
   Future<List<EventsModel>> getAllUserRoleFilteredEvents() async {
     final user = await UserService(uid: uid).getUserData();
     //filter events data based on user role
-    if (user.role.contains('club')) {
-      final querySnapshot = await _eventsCollection
-          .where('organizer', isEqualTo: user.homeClub)
-          .get();
-      return querySnapshot.docs.map(_eventFromDocument).toList();
-    } else if (user.role.contains('region')) {
-      final querySnapshot =
-          await _eventsCollection.where('region', isEqualTo: user.region).get();
-      return querySnapshot.docs.map(_eventFromDocument).toList();
-    } else if (user.role.contains('department')) {
-      final querySnapshot = await _eventsCollection
-          .where('department', isEqualTo: user.department)
-          .get();
-      return querySnapshot.docs.map(_eventFromDocument).toList();
-    }
+    // if (user.role.contains('club')) {
+    //   final querySnapshot = await _eventsCollection
+    //       .where('organizer', isEqualTo: user.homeClub)
+    //       .get();
+    //   return querySnapshot.docs.map(_eventFromDocument).toList();
+    // } else if (user.role.contains('region')) {
+    //   final querySnapshot =
+    //       await _eventsCollection.where('region', isEqualTo: user.region).get();
+    //   return querySnapshot.docs.map(_eventFromDocument).toList();
+    // } else if (user.role.contains('department')) {
+    //   final querySnapshot = await _eventsCollection
+    //       .where('department', isEqualTo: user.department)
+    //       .get();
+    //   return querySnapshot.docs.map(_eventFromDocument).toList();
+    // }
     final querySnapshot = await _eventsCollection.get();
     return querySnapshot.docs.map(_eventFromDocument).toList();
   }
