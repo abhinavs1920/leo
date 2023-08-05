@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:leo/models/events.model.dart';
-import 'package:leo/services/user.service.dart';
 
 class EventsService {
-  final String uid;
-  EventsService({required this.uid});
+  final String? uid;
+  EventsService({this.uid});
 
   final CollectionReference _eventsCollection =
       FirebaseFirestore.instance.collection('events');
@@ -76,7 +75,7 @@ class EventsService {
   }
 
   Future<List<EventsModel>> getAllUserRoleFilteredEvents() async {
-    final user = await UserService(uid: uid).getUserData();
+    // final user = await UserService(uid: uid).getUserData();
     //filter events data based on user role
     // if (user.role.contains('club')) {
     //   final querySnapshot = await _eventsCollection

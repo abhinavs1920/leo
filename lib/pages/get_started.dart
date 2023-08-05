@@ -4,7 +4,9 @@ import 'package:leo/services/csmdata.service.dart';
 import 'package:leo/utils/constants.dart';
 import 'package:leo/utils/routes.dart';
 import 'package:leo/utils/static_data.dart';
+import 'package:leo/widgets/custom_appbar.dart';
 import 'package:leo/widgets/name_card.dart';
+import 'package:leo/widgets/unauth_drawer_wrapper.dart';
 
 class GetStartedPage extends StatelessWidget {
   static const Map<String, Object> metaData = StaticData.getStartedPage;
@@ -13,6 +15,8 @@ class GetStartedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: ''),
+      endDrawer: UnAuthDrawerWrapper(),
       backgroundColor: primaryBackgroundColor,
       body: FutureBuilder(
         future: CSMDataService().getCSMData(),
@@ -76,7 +80,7 @@ class GetStartedPage extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () => {
                                   Navigator.of(context)
-                                      .popAndPushNamed(RouteEnums.login)
+                                      .popAndPushNamed(RouteEnums.eventsPage)
                                 },
                                 child: Text(
                                   csmData.getStartedPageBtnText,

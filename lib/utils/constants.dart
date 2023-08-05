@@ -10,3 +10,8 @@ const primaryBackgroundColor = Color(0xFFE6E6E6);
 const defaultPadding = 16.0;
 const defaultBorderRadius = 14.0;
 const defaultCircularBordeRadius = 100.0;
+const TextStyle textStyle = TextStyle(
+  fontSize: 16,
+);
+
+enum bottomNavMapping { events, posts, addEvent, addPost }

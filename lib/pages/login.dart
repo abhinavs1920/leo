@@ -142,8 +142,9 @@ class _LoginPageState extends State<LoginPage> {
                                 password: passwordController.text,
                               );
 
-                              navigator.popAndPushNamed(
-                                RouteEnums.eventsPage,
+                              navigator.pushNamedAndRemoveUntil(
+                                RouteEnums.addEventPage,
+                                (route) => false,
                               );
                             } on FirebaseAuthException catch (error) {
                               setState(

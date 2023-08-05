@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:leo/models/auth.model.dart';
+// import 'package:leo/models/auth.model.dart';
 import 'package:leo/models/events.model.dart';
-import 'package:leo/models/user.model.dart';
+// import 'package:leo/models/user.model.dart';
 import 'package:leo/services/events.service.dart';
-import 'package:leo/services/user.service.dart';
+// import 'package:leo/services/user.service.dart';
 import 'package:leo/utils/routes.dart';
 import 'package:leo/utils/string_utility.dart';
 import 'package:leo/widgets/custom_appbar.dart';
-import 'package:leo/widgets/custom_drawer.dart';
+// import 'package:leo/widgets/custom_drawer.dart';
 import 'package:leo/widgets/events_card.dart';
+import 'package:leo/widgets/unauth_drawer_wrapper.dart';
+// import 'package:leo/widgets/unauth_drawer_wrapper.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 
 import '../utils/constants.dart';
 
@@ -25,6 +27,14 @@ class EventsPage extends StatefulWidget {
 }
 
 class _EventsPageState extends State<EventsPage> {
+  int _bottomNavIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _bottomNavIndex = index;
+    });
+  }
+
   Future<void> downloadPDF(List<EventsModel> events) async {
     final doc = pw.Document();
     // Add front page
@@ -119,115 +129,139 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthModel?>(context);
-    return auth == null
-        ? const Scaffold(
+    // final auth = Provider.of<AuthModel?>(context);
+    // return auth == null
+    //     ? const Scaffold(
+    //         appBar: CustomAppBar(
+    //           title: "Events",
+    //         ),
+    //         endDrawer: UnAuthDrawerWrapper(),
+    //         body: Center(
+    //           child: CircularProgressIndicator(),
+    //         ),
+    //       )
+    // :
+    return FutureBuilder<List<EventsModel>>(
+      future: EventsService().getAllUserRoleFilteredEvents(),
+      builder:
+          (BuildContext context, AsyncSnapshot<List<EventsModel>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
             appBar: CustomAppBar(
               title: "Events",
             ),
-            endDrawer: CustomDrawer(),
+            endDrawer: UnAuthDrawerWrapper(),
             body: Center(
               child: CircularProgressIndicator(),
             ),
-          )
-        : FutureBuilder<List<EventsModel>>(
-            future: EventsService(uid: auth.uid).getAllUserRoleFilteredEvents(),
-            builder: (BuildContext context,
-                AsyncSnapshot<List<EventsModel>> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  appBar: CustomAppBar(
-                    title: "Events",
+          );
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          final events = snapshot.data;
+          return Scaffold(
+            appBar: const CustomAppBar(
+              title: "Events",
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              fixedColor: Colors.indigo,
+              currentIndex: _bottomNavIndex,
+              onTap: _onItemTapped,
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.event,
+                    // color: primaryColor,
                   ),
-                  endDrawer: CustomDrawer(),
-                  body: Center(
-                    child: CircularProgressIndicator(),
+                  activeIcon: Icon(
+                    Icons.event,
+                    color: Colors.indigo,
                   ),
-                );
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              } else {
-                final events = snapshot.data;
-                return Scaffold(
-                  appBar: const CustomAppBar(
-                    title: "Events",
+                  label: 'Events',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.post_add),
+                  label: 'Posts',
+                  activeIcon: Icon(
+                    Icons.post_add,
+                    color: Colors.indigo,
                   ),
-                  endDrawer: const CustomDrawer(),
-                  body: events!.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No events available',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
+                ),
+              ],
+            ),
+            endDrawer: const UnAuthDrawerWrapper(),
+            body: events!.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No events available',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(defaultPadding),
+                    children: (events)
+                        .map(
+                          (event) => EventsCard(
+                            images: event.images,
+                            eventName: event.name,
+                            eventDate: DateTime.parse(event.date),
+                            eventDescription: event.description,
+                            eventLocation: event.region,
+                            eventCoordinators: event.coordinators,
+                            organiser: event.organizer,
+                            department: event.department,
+                            venue: event.venue,
+                            guests: event.guests,
+                            participants: event.participants,
+                            highlights: event.highlights,
                           ),
                         )
-                      : ListView(
-                          padding: const EdgeInsets.all(defaultPadding),
-                          children: (events)
-                              .map(
-                                (event) => EventsCard(
-                                  images: event.images,
-                                  eventName: event.name,
-                                  eventDate: DateTime.parse(event.date),
-                                  eventDescription: event.description,
-                                  eventLocation: event.region,
-                                  eventCoordinators: event.coordinators,
-                                  organiser: event.organizer,
-                                  department: event.department,
-                                  venue: event.venue,
-                                  guests: event.guests,
-                                  participants: event.participants,
-                                  highlights: event.highlights,
-                                ),
-                              )
-                              .toList(),
-                        ),
-                  floatingActionButton: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      FloatingActionButton(
-                        heroTag: "downloadButton",
-                        onPressed: () async {
-                          await downloadPDF(events);
-                        },
-                        backgroundColor: primaryColor,
-                        child: Icon(Icons.download),
-                      ),
-                      const SizedBox(
-                        height: defaultPadding,
-                      ),
-                      FloatingActionButton(
-                        heroTag: "addEventButton",
-                        onPressed: () async {
-                          final navigator = Navigator.of(context);
-                          final scaffoldMessgener =
-                              ScaffoldMessenger.of(context);
-                          UserModel? user =
-                              await UserService(uid: auth?.uid ?? '')
-                                  .getUserData();
-                          if (user.role == 'club_member' ||
-                              user.role == 'region_coordinator' ||
-                              user.role == 'department_chairperson' ||
-                              user.role == 'district_member') {
-                            const snackBar = SnackBar(
-                              content:
-                                  Text('You are not authorized to add events'),
-                            );
-                            scaffoldMessgener.showSnackBar(snackBar);
-                          } else {
-                            navigator.pushNamed(RouteEnums.addEventPage);
-                          }
-                        },
-                        backgroundColor: primaryColor,
-                        child: const Icon(Icons.add),
-                      ),
-                    ],
+                        .toList(),
                   ),
-                );
-              }
-            },
+            floatingActionButton: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: "downloadButton",
+                  onPressed: () async {
+                    await downloadPDF(events);
+                  },
+                  backgroundColor: primaryColor,
+                  child: Icon(Icons.download),
+                ),
+                const SizedBox(
+                  height: defaultPadding,
+                ),
+                FloatingActionButton(
+                  heroTag: "addEventButton",
+                  onPressed: () {
+                    final navigator = Navigator.of(context);
+                    // final scaffoldMessgener = ScaffoldMessenger.of(context);
+                    // UserModel? user =
+                    //     await UserService(uid: auth?.uid ?? '').getUserData();
+                    // if (user.role == 'club_member' ||
+                    //     user.role == 'region_coordinator' ||
+                    //     user.role == 'department_chairperson' ||
+                    //     user.role == 'district_member') {
+                    //   const snackBar = SnackBar(
+                    //     content: Text('You are not authorized to add events'),
+                    //   );
+                    //   scaffoldMessgener.showSnackBar(snackBar);
+                    // } else {
+                    navigator.pushNamed(RouteEnums.login);
+                    // }
+                  },
+                  backgroundColor: primaryColor,
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            ),
           );
+        }
+      },
+    );
   }
 }
