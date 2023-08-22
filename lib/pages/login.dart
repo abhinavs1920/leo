@@ -143,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                               );
 
                               navigator.pushNamedAndRemoveUntil(
-                                RouteEnums.addEventPage,
+                                RouteEnums.authWrapper,
                                 (route) => false,
                               );
                             } on FirebaseAuthException catch (error) {

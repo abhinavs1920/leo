@@ -34,11 +34,11 @@ class MyApp extends StatelessWidget {
         title: 'Leo',
         theme: lightThemeData,
         routes: {
-          // RouteEnums.authWrapper: (context) => const AuthWrapper(),
+          RouteEnums.authWrapper: (context) => const AuthWrapper(),
           RouteEnums.getStarted: (context) => const GetStartedPage(),
           RouteEnums.login: (context) => const LoginPage(),
           RouteEnums.eventsPage: (context) => const EventsPage(),
-          RouteEnums.addEventPage: (context) => const AddEventPage()
+          // RouteEnums.addEventPage: (context) => const AddEventPage()
         },
       ),
     );

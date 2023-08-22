@@ -54,7 +54,7 @@ class _AddEventPageState extends State<AddEventPage> {
   final formKey = GlobalKey<FormState>();
 
   Future<void> _createEvent(String uid) async {
-    await EventsService(uid: uid).addEmergency(
+    await EventsService(uid: uid).addEvent(
       eventNameController.text,
       organiser ?? '',
       region ?? '',

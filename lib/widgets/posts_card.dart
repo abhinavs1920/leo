@@ -5,12 +5,12 @@ import 'package:leo/utils/constants.dart';
 class PostsCard extends StatefulWidget {
   final List<dynamic>? images;
   final String postTitle;
-  final String postContent;
+  final String postDescription;
   const PostsCard({
     super.key,
     this.images,
     required this.postTitle,
-    required this.postContent,
+    required this.postDescription,
   });
 
   @override
@@ -55,7 +55,7 @@ class _PostsCardState extends State<PostsCard> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            if (widget.images != null) ...[
+            if (widget.images?.length != 0) ...[
               CarouselSlider(
                 items: caraouselImages,
                 carouselController: _controller,
@@ -78,7 +78,7 @@ class _PostsCardState extends State<PostsCard> {
               ),
               contentPadding: const EdgeInsets.all(defaultPadding / 2),
               subtitle: Text(
-                widget.postContent,
+                widget.postDescription,
                 textAlign: TextAlign.justify,
               ),
               // trailing: const Icon(Icons.arrow_forward_ios, ),

@@ -9,7 +9,7 @@ class EventsService {
       FirebaseFirestore.instance.collection('events');
 
   //add event
-  Future<DocumentReference> addEmergency(
+  Future<DocumentReference> addEvent(
     String name,
     String organizer,
     String region,
