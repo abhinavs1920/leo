@@ -18,8 +18,8 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   int _bottomNavIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
-    EventsList(),
+  static List<Widget> _pages = <Widget>[
+    EventsList(date: DateTime.now()),
     PostsList(),
   ];
 

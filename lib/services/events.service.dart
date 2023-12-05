@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:leo/models/events.model.dart';
+import 'package:printing/printing.dart';
 
 class EventsService {
   final String? uid;
@@ -92,9 +94,21 @@ class EventsService {
     //       .get();
     //   return querySnapshot.docs.map(_eventFromDocument).toList();
     // }
+
     final querySnapshot = await _eventsCollection.get();
     return querySnapshot.docs.map(_eventFromDocument).toList();
   }
+
+  Future<List<EventsModel>> getAllUserRoleFilteredEventsDateFilter(DateTime _date) async {
+    final formattedDate = DateFormat('yyyy-MM-dd').format(_date);
+    final querySnapshot = await _eventsCollection
+        .where('date', isEqualTo: formattedDate)
+        .get();
+
+    return querySnapshot.docs.map(_eventFromDocument).toList();
+  }
+
+
 
   //get events list of a user
   Stream<List<QueryDocumentSnapshot<Object?>>> get getUserEvents {

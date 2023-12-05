@@ -27,12 +27,14 @@ class EventsPage extends StatefulWidget {
   @override
   State<EventsPage> createState() => _EventsPageState();
 }
+DateTime? _selectedDate;
 
 class _EventsPageState extends State<EventsPage> {
   int _bottomNavIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
-    EventsList(),
+
+  static List<Widget> _pages = <Widget>[
+    EventsList(date: _selectedDate,),
     PostsList(),
   ];
 
@@ -45,6 +47,7 @@ class _EventsPageState extends State<EventsPage> {
       'icon': Icons.notes,
       'title': 'Posts',
     },
+
   ];
 
   dynamic _onItemTapped(int index) {
@@ -161,6 +164,7 @@ class _EventsPageState extends State<EventsPage> {
     //         ),
     //       )
     // :
+
     return Scaffold(
       appBar: CustomAppBar(
         title: _bottomNavIndex == 0 ? "Events" : "Posts",
@@ -209,10 +213,77 @@ class _EventsPageState extends State<EventsPage> {
         iconsList: iconsList,
         onItemTapped: _onItemTapped,
       ),
-      body: IndexedStack(
-        index: _bottomNavIndex,
-        children: _pages,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 20,),
+            Container(
+              padding: EdgeInsets.all(8),
+              height: 60,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (_selectedDate != null)
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            DateFormat('yyyy-MM-dd').format(_selectedDate!),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(width: 12),
+                  TextButton.icon(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(Icons.calendar_today),
+                    label: Text('Filter Date'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white, backgroundColor: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IndexedStack(
+              index: _bottomNavIndex,
+              children: [
+                EventsList(date: _selectedDate),
+                PostsList(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      // Reload the entire screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (BuildContext context) => EventsPage(),
+        ),
+      );
+    }
+  }
+
 }
+
+
